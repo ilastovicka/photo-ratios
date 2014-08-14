@@ -9,9 +9,9 @@ def callback(event):
 
 def callbackrelease(event):
     print "released at", event.x, event.y
+
     
 class App:
-
   def __init__(self):
     self.root = Tk()
     self.topframe = Frame(self.root)
@@ -27,15 +27,16 @@ class App:
 
     self.file_opt = options = {}
     options['filetypes'] = [('all files', '.*'), ('image files', '.jpg')]
-    options['parent'] = root
+    options['parent'] = self.root
 
     #image = Image.open(
 
     #w = Canvas(frame, width=200, height=100)
     
+
   def handler(self):
-    self.root.quit()
-  
+      self.root.quit()
+      
   def askopenfilename(self):
         
     filename = tkFileDialog.askopenfilename(**self.file_opt)
@@ -61,7 +62,12 @@ class App:
         imagew = int(imagew * scalefactor * .9)
         imageh = int(imageh * scalefactor * .9)
         scaled = True
-        
+
+    #reset window - downsizes window if opening smaller image after large
+    self.canvas.grid_forget()
+    self.button.grid_forget()
+    self.button.grid(row=0, column=0, sticky = 'w')
+    
     self.canvas = Canvas(self.topframe, width = imagew, height = imageh)
     self.canvas.bind('<ButtonPress-1>', callback)
     self.canvas.bind('<ButtonRelease-1>', callbackrelease)
