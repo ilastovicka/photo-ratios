@@ -4,7 +4,8 @@
 from Tkinter import *
 import tkFileDialog
 from PIL import Image, ImageTk
-
+import hashlib
+import os
 
 class App:
 
@@ -30,8 +31,24 @@ class App:
                                 '.jpg')]
         options['parent'] = self.root
 
+
         self.grabbed = False
         self.canvasrect = 0
+
+        # file information
+        self.fileinfo = []
+        self.saveddir = ''
+
+        try :
+            f = open('lastdir.txt', 'r+')
+            self.saveddir = f.read()
+            f.close()
+
+        except (IOError) :
+            print 'No last directory file'
+
+        if self.saveddir != '' :
+            self.file_opt['initialdir'] = self.saveddir
 
     # image = Image.open(
 
@@ -44,9 +61,17 @@ class App:
         try:
             filename = tkFileDialog.askopenfilename(**self.file_opt)
             image = Image.open(filename)
+            newpath = os.path.dirname(filename)
+            self.fileinfo.append(carInfo(filename, hashlib.sha256(open(filename, 'rb').read()).digest()))
         except (AttributeError, IOError):
 
             return
+
+        with open('lastdir.txt', 'w') as f:
+            f.write(newpath)
+
+        f.closed
+
 
     # print filename
     # image = Image.open(filename)
@@ -311,6 +336,14 @@ class GrabbableRectangle:
 
         self.creategrabs()
         return self.bounds()
+
+class carInfo :
+
+    def __init__(self, fname, fhash):
+        self.filename = fname
+        self.shahash = fhash
+        self.points = []
+
 
 
 def main():
