@@ -6,6 +6,7 @@ import tkFileDialog
 from PIL import Image, ImageTk
 import hashlib
 import os
+import csv
 
 class App:
 
@@ -31,13 +32,17 @@ class App:
                                 '.jpg')]
         options['parent'] = self.root
 
-
         self.grabbed = False
         self.canvasrect = 0
+
+        self.lineid = 0
 
         # file information
         self.fileinfo = []
         self.saveddir = ''
+        self.csvcols = []
+        self.linebuttonvar = StringVar()
+        self.linedict = {}
 
         try :
             f = open('lastdir.txt', 'r+')
@@ -70,9 +75,6 @@ class App:
         with open('lastdir.txt', 'w') as f:
             f.write(newpath)
 
-        f.closed
-
-
     # print filename
     # image = Image.open(filename)
 
@@ -87,11 +89,11 @@ class App:
 
         if imagew > self.root.winfo_screenwidth():
 
-        # scale the image down
+            # scale the image down
 
             scalefactor = float(self.root.winfo_screenwidth()) / imagew
 
-        # print scalefactor
+            # print scalefactor
 
             imagew = int(imagew * scalefactor * .9)
             imageh = int(imageh * scalefactor * .9)
@@ -123,7 +125,52 @@ class App:
 
         self.photo = ImageTk.PhotoImage(image)
         self.canvas.create_image(0, 0, image=self.photo, anchor='nw')
-        
+
+        with open('cargridlines.txt', 'r') as txtfile:
+            for row in txtfile:
+                self.csvcols.append(row.strip())
+
+        self.linedict = dict.fromkeys(self.csvcols)
+
+        self.buttoncolwidth = 6 * max([len(self.csvcols)])
+
+        buttonholder = []
+        self.buttonwindow = Tk()
+        sizex = self.buttoncolwidth
+        sizey = 600
+        posx  = 100
+        posy  = 100
+        self.buttonwindow.wm_geometry("%dx%d+%d+%d" % (sizex, sizey, posx, posy))
+
+        self.buttoncol = Frame(self.buttonwindow, width=100, height=600, bd=1)
+        self.buttoncol.pack(fill='y', padx=5, pady=5)
+
+        #self.buttoncol.grid(column=0, row=0, sticky='n')
+        self.buttoncanvas = Canvas(self.buttoncol)
+        buttonframe = Frame(self.buttoncanvas)
+        myscrollbar = Scrollbar(self.buttoncol, orient='vertical', command=self.buttoncanvas.yview)
+        self.buttoncanvas.configure(yscrollcommand=myscrollbar.set)
+
+        myscrollbar.pack(side='right', fill='y')
+        self.buttoncanvas.pack(side="left", fill='y')
+        self.buttoncanvas.create_window((0,0),window=buttonframe, anchor='nw')
+        self.linebuttonvar = StringVar(master=self.buttonwindow)
+        self.linebuttonvar.set(self.csvcols[0])
+        for n in range(len(self.csvcols)):
+            buttonholder.append(Radiobutton(buttonframe,
+                                            text=self.csvcols[n],
+                                            variable=self.linebuttonvar,
+                                            value=self.csvcols[n],
+                                            indicatoron=0,
+                                            command=self.setline
+                                            ))
+            buttonholder[n].grid(column=0, row=n, sticky='w')
+
+        buttonframe.bind("<Configure>",self.buttonscrollbarfunc)
+
+    def buttonscrollbarfunc(self,event):
+        self.buttoncanvas.configure(scrollregion=self.buttoncanvas.bbox("all"),width=self.buttoncolwidth,height=600)
+
     def setline(self):
         self.line = 0
         self.canvas.bind('<ButtonPress-1>', self.linestart)
@@ -133,15 +180,31 @@ class App:
     def linestart(self, event):
         if self.line:
             self.canvas.delete(self.line)
-        self.line = self.canvas.create_line(event.x, self.rectorigy, event.x, self.rectendy, fill = 'blue')
+        if event.x > self.rect.x2:
+            self.line = self.canvas.create_line(self.rect.x2, self.rect.y1, self.rect.x2, self.rect.y2, fill = 'blue')
+        elif event.x < self.rect.x1:
+            self.line = self.canvas.create_line(self.rect.x1, self.rect.y1, self.rect.x1, self.rect.y2, fill = 'blue')
+        else:
+            self.line = self.canvas.create_line(event.x, self.rect.y1, event.x, self.rect.y2, fill = 'blue')
     
     def linemotion(self, event):
         self.canvas.delete(self.line)
-        self.line = self.canvas.create_line(event.x, self.rectorigy, event.x, self.rectendy, fill = 'blue')
+
+        if event.x > self.rect.x2:
+            self.line = self.canvas.create_line(self.rect.x2, self.rect.y1, self.rect.x2, self.rect.y2, fill = 'blue')
+        elif event.x < self.rect.x1:
+            self.line = self.canvas.create_line(self.rect.x1, self.rect.y1, self.rect.x1, self.rect.y2, fill = 'blue')
+        else:
+            self.line = self.canvas.create_line(event.x, self.rect.y1, event.x, self.rect.y2, fill = 'blue')
         
     def linerelease(self, event):
         self.canvas.delete(self.line)
-        self.line = self.canvas.create_line(event.x, self.rectorigy, event.x, self.rectendy, fill = 'blue')
+        if event.x > self.rect.x2:
+            self.line = self.canvas.create_line(self.rect.x2, self.rect.y1, self.rect.x2, self.rect.y2, fill = 'blue')
+        elif event.x < self.rect.x1:
+            self.line = self.canvas.create_line(self.rect.x1, self.rect.y1, self.rect.x1, self.rect.y2, fill = 'blue')
+        else:
+            self.line = self.canvas.create_line(event.x, self.rect.y1, event.x, self.rect.y2, fill = 'blue')
 
     def callback(self, event):
         if self.canvasrect:
@@ -247,7 +310,7 @@ class GrabHandle:
         self,
         x1,
         y1,
-        ):
+    ):
         widthpix = 4
         self.x1 = x1 - widthpix
         self.y1 = y1 - widthpix
@@ -266,7 +329,9 @@ class GrabLine:
         y1,
         x2,
         y2,
-        ):
+        id
+    ):
+        self.id = id
         widthpix = 4
         if x1 == x2:
             self.x1 = x1 - widthpix
