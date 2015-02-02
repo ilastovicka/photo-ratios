@@ -7,6 +7,7 @@ from PIL import Image, ImageTk
 import hashlib
 import os
 import csv
+import binascii
 
 class App:
 
@@ -23,6 +24,9 @@ class App:
         self.button.grid(row=0, column=0, sticky='w')
         self.linebutton = Button(self.buttonframe, text='Line', command = self.setline, state = 'disabled')
         self.linebutton.grid(row=0, column=1, sticky = 'w')
+
+        self.savebutton = Button(self.buttonframe, text='Save', command=self.save, state='disabled')
+        self.savebutton.grid(row=0, column=2, sticky='w')
 
         self.canvas = Canvas(self.topframe)
         self.canvas.grid(row=1)
@@ -43,6 +47,8 @@ class App:
         self.csvcols = []
         self.linebuttonvar = StringVar()
         self.linedict = {}
+
+
 
         try :
             f = open('lastdir.txt', 'r+')
@@ -67,7 +73,7 @@ class App:
             filename = tkFileDialog.askopenfilename(**self.file_opt)
             image = Image.open(filename)
             newpath = os.path.dirname(filename)
-            self.fileinfo.append(carInfo(filename, hashlib.sha256(open(filename, 'rb').read()).digest()))
+            self.fileinfo.append(carInfo(os.path.basename(filename), binascii.hexlify(hashlib.sha256(open(filename, 'rb').read()).digest())))
         except (AttributeError, IOError):
 
             return
@@ -172,39 +178,41 @@ class App:
         self.buttoncanvas.configure(scrollregion=self.buttoncanvas.bbox("all"),width=self.buttoncolwidth,height=600)
 
     def setline(self):
-        self.line = 0
+        self.line = self.linedict[self.linebuttonvar.get()]
         self.canvas.bind('<ButtonPress-1>', self.linestart)
         self.canvas.bind('<B1-Motion>', self.linemotion)
         self.canvas.bind('<ButtonRelease-1>', self.linerelease)
     
     def linestart(self, event):
-        if self.line:
-            self.canvas.delete(self.line)
+        if self.linedict[self.linebuttonvar.get()]:
+            self.canvas.delete(self.linedict[self.linebuttonvar.get()])
         if event.x > self.rect.x2:
-            self.line = self.canvas.create_line(self.rect.x2, self.rect.y1, self.rect.x2, self.rect.y2, fill = 'blue')
+            self.linedict[self.linebuttonvar.get()] = self.canvas.create_line(self.rect.x2, self.rect.y1, self.rect.x2, self.rect.y2, fill = 'blue')
         elif event.x < self.rect.x1:
-            self.line = self.canvas.create_line(self.rect.x1, self.rect.y1, self.rect.x1, self.rect.y2, fill = 'blue')
+            self.linedict[self.linebuttonvar.get()] = self.canvas.create_line(self.rect.x1, self.rect.y1, self.rect.x1, self.rect.y2, fill = 'blue')
         else:
-            self.line = self.canvas.create_line(event.x, self.rect.y1, event.x, self.rect.y2, fill = 'blue')
+            self.linedict[self.linebuttonvar.get()] = self.canvas.create_line(event.x, self.rect.y1, event.x, self.rect.y2, fill = 'blue')
     
     def linemotion(self, event):
-        self.canvas.delete(self.line)
+        self.canvas.delete(self.linedict[self.linebuttonvar.get()])
 
         if event.x > self.rect.x2:
-            self.line = self.canvas.create_line(self.rect.x2, self.rect.y1, self.rect.x2, self.rect.y2, fill = 'blue')
+            self.linedict[self.linebuttonvar.get()] = self.canvas.create_line(self.rect.x2, self.rect.y1, self.rect.x2, self.rect.y2, fill = 'blue')
         elif event.x < self.rect.x1:
-            self.line = self.canvas.create_line(self.rect.x1, self.rect.y1, self.rect.x1, self.rect.y2, fill = 'blue')
+            self.linedict[self.linebuttonvar.get()] = self.canvas.create_line(self.rect.x1, self.rect.y1, self.rect.x1, self.rect.y2, fill = 'blue')
         else:
-            self.line = self.canvas.create_line(event.x, self.rect.y1, event.x, self.rect.y2, fill = 'blue')
+            self.linedict[self.linebuttonvar.get()] = self.canvas.create_line(event.x, self.rect.y1, event.x, self.rect.y2, fill = 'blue')
         
     def linerelease(self, event):
-        self.canvas.delete(self.line)
+        self.canvas.delete(self.linedict[self.linebuttonvar.get()])
         if event.x > self.rect.x2:
-            self.line = self.canvas.create_line(self.rect.x2, self.rect.y1, self.rect.x2, self.rect.y2, fill = 'blue')
+            self.linedict[self.linebuttonvar.get()] = self.canvas.create_line(self.rect.x2, self.rect.y1, self.rect.x2, self.rect.y2, fill = 'blue')
         elif event.x < self.rect.x1:
-            self.line = self.canvas.create_line(self.rect.x1, self.rect.y1, self.rect.x1, self.rect.y2, fill = 'blue')
+            self.linedict[self.linebuttonvar.get()] = self.canvas.create_line(self.rect.x1, self.rect.y1, self.rect.x1, self.rect.y2, fill = 'blue')
         else:
-            self.line = self.canvas.create_line(event.x, self.rect.y1, event.x, self.rect.y2, fill = 'blue')
+            self.linedict[self.linebuttonvar.get()] = self.canvas.create_line(event.x, self.rect.y1, event.x, self.rect.y2, fill = 'blue')
+
+
 
     def callback(self, event):
         if self.canvasrect:
@@ -276,6 +284,7 @@ class App:
             self.canvasrect = self.canvas.create_rectangle(self.rect.bounds(), outline = 'red')
             self.creategrabs()
             self.linebutton.config(state = 'active')
+            self.savebutton.config(state = 'active')
 
         else :
             # resize the rectangle
@@ -303,6 +312,32 @@ class App:
         self.grabs['sw'] = GrabHandle(self.rectorigx, self.rectendy)
         self.grabs['w'] = GrabLine(self.rectorigx, self.rectorigy, self.rectorigx, self.rectendy)
 
+    # save csv file
+    def save(self):
+        csvdata = {}
+        for x in self.linedict:
+            if self.linedict[x] :
+                for n in range(len(self.canvas.coords(self.linedict[x]))):
+                    csvdata[x + str(n)] = self.canvas.coords(self.linedict[x])[n]
+            else:
+                csvdata[x] = 0
+        csvdata['x1'] = self.rect.x1
+        csvdata['y1'] = self.rect.y1
+        csvdata['x2'] = self.rect.x2
+        csvdata['y2'] = self.rect.y2
+        csvheader = csvdata.keys()
+        csvheader.sort()
+        csvheader.insert(0, 'filename')
+        csvheader.insert(1, 'sha256')
+        csvdata['filename'] = self.fileinfo[0].filename
+        csvdata['sha256'] = self.fileinfo[0].shahash
+
+        with open('carinfo.csv', 'w') as csvfile:
+            csvwriter = csv.DictWriter(csvfile, csvheader)
+            csvwriter.writeheader()
+            csvwriter.writerow(csvdata)
+
+
 
 class GrabHandle:
 
@@ -329,7 +364,7 @@ class GrabLine:
         y1,
         x2,
         y2,
-        id
+        id = 0
     ):
         self.id = id
         widthpix = 4
