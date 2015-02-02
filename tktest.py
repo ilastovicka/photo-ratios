@@ -47,6 +47,7 @@ class App:
         self.csvcols = []
         self.linebuttonvar = StringVar()
         self.linedict = {}
+        self.labeldict = {}
 
 
 
@@ -140,7 +141,7 @@ class App:
 
         self.buttoncolwidth = 6 * max([len(self.csvcols)])
 
-        buttonholder = []
+        self.buttonholder = []
         self.buttonwindow = Tk()
         sizex = self.buttoncolwidth
         sizey = 600
@@ -163,14 +164,15 @@ class App:
         self.linebuttonvar = StringVar(master=self.buttonwindow)
         self.linebuttonvar.set(self.csvcols[0])
         for n in range(len(self.csvcols)):
-            buttonholder.append(Radiobutton(buttonframe,
+            self.buttonholder.append(Radiobutton(buttonframe,
                                             text=self.csvcols[n],
                                             variable=self.linebuttonvar,
                                             value=self.csvcols[n],
                                             indicatoron=0,
-                                            command=self.setline
+                                            command=self.setline,
+                                            state='disabled'
                                             ))
-            buttonholder[n].grid(column=0, row=n, sticky='w')
+            self.buttonholder[n].grid(column=0, row=n, sticky='w')
 
         buttonframe.bind("<Configure>",self.buttonscrollbarfunc)
 
@@ -186,6 +188,13 @@ class App:
     def linestart(self, event):
         if self.linedict[self.linebuttonvar.get()]:
             self.canvas.delete(self.linedict[self.linebuttonvar.get()])
+        try:
+            if self.labeldict[self.linebuttonvar.get()]:
+                self.canvas.delete(self.labeldict[self.linebuttonvar.get()])
+        except KeyError:
+            pass
+
+
         if event.x > self.rect.x2:
             self.linedict[self.linebuttonvar.get()] = self.canvas.create_line(self.rect.x2, self.rect.y1, self.rect.x2, self.rect.y2, fill = 'blue')
         elif event.x < self.rect.x1:
@@ -206,11 +215,22 @@ class App:
     def linerelease(self, event):
         self.canvas.delete(self.linedict[self.linebuttonvar.get()])
         if event.x > self.rect.x2:
-            self.linedict[self.linebuttonvar.get()] = self.canvas.create_line(self.rect.x2, self.rect.y1, self.rect.x2, self.rect.y2, fill = 'blue')
+            linex1 = self.rect.x2
+            liney1 = self.rect.y1
+            linex2 = self.rect.x2
+            liney2 = self.rect.y2
         elif event.x < self.rect.x1:
-            self.linedict[self.linebuttonvar.get()] = self.canvas.create_line(self.rect.x1, self.rect.y1, self.rect.x1, self.rect.y2, fill = 'blue')
+            linex1 = self.rect.x1
+            liney1 = self.rect.y1
+            linex2 = self.rect.x1
+            liney2 = self.rect.y2
         else:
-            self.linedict[self.linebuttonvar.get()] = self.canvas.create_line(event.x, self.rect.y1, event.x, self.rect.y2, fill = 'blue')
+            linex1 = event.x
+            liney1 = self.rect.y1
+            linex2 = event.x
+            liney2 = self.rect.y2
+        self.linedict[self.linebuttonvar.get()] = self.canvas.create_line(linex1, liney1, linex2, liney2, fill = 'blue')
+        self.labeldict[self.linebuttonvar.get()] = self.canvas.create_text(linex1, liney1, anchor='s', text=self.linebuttonvar.get())
 
 
 
@@ -285,6 +305,8 @@ class App:
             self.creategrabs()
             self.linebutton.config(state = 'active')
             self.savebutton.config(state = 'active')
+            for button in self.buttonholder:
+                button.config(state = 'normal')
 
         else :
             # resize the rectangle
