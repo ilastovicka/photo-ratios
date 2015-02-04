@@ -62,6 +62,22 @@ class App:
         if self.saveddir != '' :
             self.file_opt['initialdir'] = self.saveddir
 
+        # open previous csv coordinate file
+
+        self.oldheader = []
+        self.carhashes = []
+        try :
+            f = open('carinfo.csv', 'r')
+            reader = csv.DictReader(f)
+            for row in reader:
+                self.oldheader = row.keys()
+                self.carhashes.append(row['sha256'])
+            f.close()
+        except(IOError):
+            print 'No previous car info available'
+        except(KeyError):
+            print 'Hash not available, car info file is in wrong format'
+
     # image = Image.open(
 
     # w = Canvas(frame, width=200, height=100)
@@ -337,27 +353,41 @@ class App:
     # save csv file
     def save(self):
         csvdata = {}
+        # get all data for all lines in linedict
         for x in self.linedict:
             if self.linedict[x] :
-                for n in range(len(self.canvas.coords(self.linedict[x]))):
-                    csvdata[x + str(n)] = self.canvas.coords(self.linedict[x])[n]
+                linecoords = self.canvas.coords(self.linedict[x])
+                csvdata[x+'_x1'] = linecoords[0]
+                csvdata[x+'_y1'] = linecoords[1]
+                csvdata[x+'_x2'] = linecoords[2]
+                csvdata[x+'_y2'] = linecoords[3]
             else:
-                csvdata[x] = 0
+                csvdata[x+'_x1'] = 0
+                csvdata[x+'_y1'] = 0
+                csvdata[x+'_x2'] = 0
+                csvdata[x+'_y2'] = 0
+        # add in bounding rectangle data
         csvdata['x1'] = self.rect.x1
         csvdata['y1'] = self.rect.y1
         csvdata['x2'] = self.rect.x2
         csvdata['y2'] = self.rect.y2
+        # get the header for the csv file
         csvheader = csvdata.keys()
         csvheader.sort()
         csvheader.insert(0, 'filename')
         csvheader.insert(1, 'sha256')
         csvdata['filename'] = self.fileinfo[0].filename
         csvdata['sha256'] = self.fileinfo[0].shahash
+        if self.oldheader:
+            with open('carinfo.csv', 'a') as csvfile:
+                csvwriter = csv.DictWriter(csvfile, fieldnames=csvheader)
+                csvwriter.writerow(csvdata)
 
-        with open('carinfo.csv', 'w') as csvfile:
-            csvwriter = csv.DictWriter(csvfile, csvheader)
-            csvwriter.writeheader()
-            csvwriter.writerow(csvdata)
+        else:
+            with open('carinfo.csv', 'w') as csvfile:
+                csvwriter = csv.DictWriter(csvfile, fieldnames=csvheader)
+                csvwriter.writeheader()
+                csvwriter.writerow(csvdata)
 
 
 
