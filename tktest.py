@@ -22,8 +22,6 @@ class App:
         self.button = Button(self.buttonframe, text='Open Image',
                              command=self.askopenfilename)
         self.button.grid(row=0, column=0, sticky='w')
-        self.linebutton = Button(self.buttonframe, text='Line', command = self.setline, state = 'disabled')
-        self.linebutton.grid(row=0, column=1, sticky = 'w')
 
         self.savebutton = Button(self.buttonframe, text='Save', command=self.save, state='disabled')
         self.savebutton.grid(row=0, column=2, sticky='w')
@@ -73,10 +71,11 @@ class App:
                 self.oldheader = row.keys()
                 self.carhashes.append(row['sha256'])
             f.close()
-        except(IOError):
-            print 'No previous car info available'
-        except(KeyError):
-            print 'Hash not available, car info file is in wrong format'
+        except E:
+            if type(E) == IOError:
+                print 'No previous car info available'
+            if type(E) == KeyError:
+                print 'Hash not available, car info file is in wrong format'
 
     # image = Image.open(
 
@@ -155,7 +154,7 @@ class App:
 
         self.linedict = dict.fromkeys(self.csvcols)
 
-        self.buttoncolwidth = 6 * max([len(self.csvcols)])
+        self.buttoncolwidth = 9 * len(max(self.csvcols, key=len))
 
         self.buttonholder = []
         self.buttonwindow = Tk()
@@ -210,43 +209,106 @@ class App:
         except KeyError:
             pass
 
-
-        if event.x > self.rect.x2:
-            self.linedict[self.linebuttonvar.get()] = self.canvas.create_line(self.rect.x2, self.rect.y1, self.rect.x2, self.rect.y2, fill = 'blue')
-        elif event.x < self.rect.x1:
-            self.linedict[self.linebuttonvar.get()] = self.canvas.create_line(self.rect.x1, self.rect.y1, self.rect.x1, self.rect.y2, fill = 'blue')
+        if self.linebuttonvar.get()[-1] == 'h':
+            if event.x > self.rect.x2:
+                linex1 = self.rect.x2
+                liney1 = self.rect.y1
+                linex2 = self.rect.x2
+                liney2 = self.rect.y2
+            elif event.x < self.rect.x1:
+                linex1 = self.rect.x1
+                liney1 = self.rect.y1
+                linex2 = self.rect.x1
+                liney2 = self.rect.y2
+            else:
+                linex1 = event.x
+                liney1 = self.rect.y1
+                linex2 = event.x
+                liney2 = self.rect.y2
         else:
-            self.linedict[self.linebuttonvar.get()] = self.canvas.create_line(event.x, self.rect.y1, event.x, self.rect.y2, fill = 'blue')
+            if event.y > self.rect.y2:
+                linex1 = self.rect.x1
+                linex2 = self.rect.x2
+                liney1 = liney2 = self.rect.y2
+            elif event.y < self.rect.y1:
+                linex1 = self.rect.x1
+                linex2 = self.rect.x2
+                liney1 = liney2 = self.rect.y1
+            else:
+                linex1 = self.rect.x1
+                linex2 = self.rect.x2
+                liney1 = liney2 = event.y
+        self.linedict[self.linebuttonvar.get()] = self.canvas.create_line(linex1, liney1, linex2, liney2, fill = 'blue')
+
     
     def linemotion(self, event):
         self.canvas.delete(self.linedict[self.linebuttonvar.get()])
-
-        if event.x > self.rect.x2:
-            self.linedict[self.linebuttonvar.get()] = self.canvas.create_line(self.rect.x2, self.rect.y1, self.rect.x2, self.rect.y2, fill = 'blue')
-        elif event.x < self.rect.x1:
-            self.linedict[self.linebuttonvar.get()] = self.canvas.create_line(self.rect.x1, self.rect.y1, self.rect.x1, self.rect.y2, fill = 'blue')
+        if self.linebuttonvar.get()[-1] == 'h':
+            if event.x > self.rect.x2:
+                linex1 = self.rect.x2
+                liney1 = self.rect.y1
+                linex2 = self.rect.x2
+                liney2 = self.rect.y2
+            elif event.x < self.rect.x1:
+                linex1 = self.rect.x1
+                liney1 = self.rect.y1
+                linex2 = self.rect.x1
+                liney2 = self.rect.y2
+            else:
+                linex1 = event.x
+                liney1 = self.rect.y1
+                linex2 = event.x
+                liney2 = self.rect.y2
         else:
-            self.linedict[self.linebuttonvar.get()] = self.canvas.create_line(event.x, self.rect.y1, event.x, self.rect.y2, fill = 'blue')
+            if event.y > self.rect.y2:
+                linex1 = self.rect.x1
+                linex2 = self.rect.x2
+                liney1 = liney2 = self.rect.y2
+            elif event.y < self.rect.y1:
+                linex1 = self.rect.x1
+                linex2 = self.rect.x2
+                liney1 = liney2 = self.rect.y1
+            else:
+                linex1 = self.rect.x1
+                linex2 = self.rect.x2
+                liney1 = liney2 = event.y
+        self.linedict[self.linebuttonvar.get()] = self.canvas.create_line(linex1, liney1, linex2, liney2, fill = 'blue')
         
     def linerelease(self, event):
         self.canvas.delete(self.linedict[self.linebuttonvar.get()])
-        if event.x > self.rect.x2:
-            linex1 = self.rect.x2
-            liney1 = self.rect.y1
-            linex2 = self.rect.x2
-            liney2 = self.rect.y2
-        elif event.x < self.rect.x1:
-            linex1 = self.rect.x1
-            liney1 = self.rect.y1
-            linex2 = self.rect.x1
-            liney2 = self.rect.y2
+        if self.linebuttonvar.get()[-1] == 'h':
+            if event.x > self.rect.x2:
+                linex1 = self.rect.x2
+                liney1 = self.rect.y1
+                linex2 = self.rect.x2
+                liney2 = self.rect.y2
+            elif event.x < self.rect.x1:
+                linex1 = self.rect.x1
+                liney1 = self.rect.y1
+                linex2 = self.rect.x1
+                liney2 = self.rect.y2
+            else:
+                linex1 = event.x
+                liney1 = self.rect.y1
+                linex2 = event.x
+                liney2 = self.rect.y2
+            self.labeldict[self.linebuttonvar.get()] = self.canvas.create_text(linex1, liney1, anchor='s', text=self.linebuttonvar.get()[:-2])
         else:
-            linex1 = event.x
-            liney1 = self.rect.y1
-            linex2 = event.x
-            liney2 = self.rect.y2
+            if event.y > self.rect.y2:
+                linex1 = self.rect.x1
+                linex2 = self.rect.x2
+                liney1 = liney2 = self.rect.y2
+            elif event.y < self.rect.y1:
+                linex1 = self.rect.x1
+                linex2 = self.rect.x2
+                liney1 = liney2 = self.rect.y1
+            else:
+                linex1 = self.rect.x1
+                linex2 = self.rect.x2
+                liney1 = liney2 = event.y
+            self.labeldict[self.linebuttonvar.get()] = self.canvas.create_text(linex1, liney1, anchor='sw', text=self.linebuttonvar.get()[:-2])
         self.linedict[self.linebuttonvar.get()] = self.canvas.create_line(linex1, liney1, linex2, liney2, fill = 'blue')
-        self.labeldict[self.linebuttonvar.get()] = self.canvas.create_text(linex1, liney1, anchor='s', text=self.linebuttonvar.get())
+
 
 
 
@@ -319,7 +381,6 @@ class App:
             self.rect = GrabbableRectangle(self.rectorigx, self.rectorigy, self.rectendx, self.rectendy)
             self.canvasrect = self.canvas.create_rectangle(self.rect.bounds(), outline = 'red')
             self.creategrabs()
-            self.linebutton.config(state = 'active')
             self.savebutton.config(state = 'active')
             for button in self.buttonholder:
                 button.config(state = 'normal')
