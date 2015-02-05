@@ -210,7 +210,7 @@ class App:
         except KeyError:
             pass
 
-        if self.linebuttonvar.get()[-1] == 'h':
+        if self.linebuttonvar.get()[-1] == 'v':
             if event.x > self.rect.x2:
                 linex1 = self.rect.x2
                 liney1 = self.rect.y1
@@ -244,7 +244,7 @@ class App:
     
     def linemotion(self, event):
         self.canvas.delete(self.linedict[self.linebuttonvar.get()])
-        if self.linebuttonvar.get()[-1] == 'h':
+        if self.linebuttonvar.get()[-1] == 'v':
             if event.x > self.rect.x2:
                 linex1 = self.rect.x2
                 liney1 = self.rect.y1
@@ -277,7 +277,7 @@ class App:
         
     def linerelease(self, event):
         self.canvas.delete(self.linedict[self.linebuttonvar.get()])
-        if self.linebuttonvar.get()[-1] == 'h':
+        if self.linebuttonvar.get()[-1] == 'v':
             if event.x > self.rect.x2:
                 linex1 = self.rect.x2
                 liney1 = self.rect.y1
