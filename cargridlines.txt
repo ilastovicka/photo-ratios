@@ -1,0 +1,10 @@
+front axel_h
+rear axel_h
+windshield corner_h
+beltline_v
+axel_v
+side door rear_h
+top window corner_h
+top of window_v
+fender_v
+side skirt bottom_v

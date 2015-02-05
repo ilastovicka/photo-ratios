@@ -71,18 +71,19 @@ class App:
                 self.oldheader = row.keys()
                 self.carhashes.append(row['sha256'])
             f.close()
-        except E:
-            if type(E) == IOError:
-                print 'No previous car info available'
-            if type(E) == KeyError:
-                print 'Hash not available, car info file is in wrong format'
+        except IOError:
+            print 'No previous car info available'
+        except KeyError:
+            print 'Hash not available, car info file is in wrong format'
 
     # image = Image.open(
 
     # w = Canvas(frame, width=200, height=100)
 
     def handler(self):
-        self.root.quit()
+        self.root.destroy()
+        if self.buttonwindow:
+            self.buttonwindow.destroy()
 
     def askopenfilename(self):
         try:
